@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parkinson Symptom Detector</title>
+    <style>
+        /* Smooth Page Load Animation */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #4b6cb7, #182848);
+            color: white;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 1.5s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Content Animation */
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideIn 1s ease-out 0.5s forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Heading Animation */
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #ffcc00;
+            opacity: 0;
+            animation: fadeInText 1.2s ease-in 0.7s forwards;
+        }
+
+        @keyframes fadeInText {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        p {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        /* Button Animation */
+        .link-button {
+            display: inline-block;
+            text-decoration: none;
+            background: #ffcc00;
+            color: #000;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
+        }
+
+        .link-button:hover {
+            background: #ff9900;
+            transform: scale(1.1);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Parkinson Symptom Detector 1</h1>
+        <p>Detect and analyze tremors.</p>
+        <a href="tremor.html" class="link-button">CLICK FOR TREMOR DETECTOR</a>
+    </div>
+
+    <div class="container">
+        <h1>Parkinson Symptom Detector 2</h1>
+        <p>Monitor heart rate variations.</p>
+        <a href="heart.html" class="link-button">CLICK FOR HEART BPM DETECTOR</a>
+    </div>
+
+</body>
+</html>
