@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parkinson's Tremor Detection</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background: linear-gradient(to right, #4b6cb7, #182848);
+            color: white;
+        }
+
+        /* Header Section */
+        .header {
+            padding: 30px;
+            font-size: 30px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 20px;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        /* AI Assistance Box */
+        .ai-assistance, .tremor-range {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px auto;
+            width: 50%;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            animation: slideIn 1s ease-in-out;
+        }
+
+        /* Graph Container */
+        .graph-container {
+            width: 80%;
+            margin: 20px auto;
+            background: rgba(245, 242, 242, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        /* Canvas Styling */
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <div class="header">
+        Parkinson's Tremor Detection
+    </div>
+
+    <!-- AI Assistance Box -->
+    <div class="ai-assistance">
+        AI Diagnosis: <span id="analysis">Waiting for Data...</span>
+    </div>
+
+    <!-- Tremor Range Display -->
+    <div class="tremor-range">
+        Average Tremor Severity (last 10 sec): <span id="tremor-severity">0.00</span>
+    </div>
+
+    <!-- Graph Container -->
+    <div class="graph-container">
+        <canvas id="sensorChart"></canvas>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'AX (g)', borderColor: 'darkred', borderWidth: 2, pointRadius: 0, tension: 0.2, data: [], fill: false },
+                    { label: 'AY (g)', borderColor: 'darkblue', borderWidth: 2, pointRadius: 0, tension: 0.2, data: [], fill: false },
+                    { label: 'AZ (g)', borderColor: 'darkgreen', borderWidth: 2, pointRadius: 0, tension: 0.2, data: [], fill: false }
+                ]
+            },
+            options: {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { display: false },
+                    y: { min: -2, max: 2, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+
+        let socket = new WebSocket("ws://172.20.10.2:81/");
+        let tremorData = []; 
+        const averageWindow = 20; 
+        let lastAnalysis = "";
+
+        socket.onopen = function() {
+            console.log("Connected to WebSocket!");
+        };
+
+        socket.onmessage = function(event) {
+            let values = event.data.split(" ");
+            if (values.length < 3) return;
+
+            let ax = parseFloat(values[0].split(":")[1]) || 0;
+            let ay = parseFloat(values[1].split(":")[1]) || 0;
+            let az = parseFloat(values[2].split(":")[1]) || 0;
+
+            addData(chart, ax, ay, az);
+            processTremorData(ax, ay, az);
+        };
+
+        function addData(chart, ax, ay, az) {
+            if (chart.data.labels.length > 50) {
+                chart.data.labels.shift();
+                chart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+            chart.data.labels.push("");
+            chart.data.datasets[0].data.push(ax);
+            chart.data.datasets[1].data.push(ay);
+            chart.data.datasets[2].data.push(az);
+            chart.update();
+        }
+
+        function processTremorData(ax, ay, az) {
+            let severity = Math.sqrt(ax ** 2 + ay ** 2 + az ** 2); 
+
+            if (tremorData.length >= averageWindow) {
+                tremorData.shift(); 
+            }
+            tremorData.push(severity);
+
+            let avgSeverity = tremorData.reduce((sum, value) => sum + value, 0) / tremorData.length;
+
+            document.getElementById("tremor-severity").innerText = avgSeverity.toFixed(2);
+
+            let analysisText = "Normal - No tremor detected.";
+
+            if (avgSeverity > 1) {
+                analysisText = "Mild tremors - Regular monitoring suggested.";
+            }
+            if (avgSeverity > 1.5) {
+                analysisText = "Moderate tremors - Consult a neurologist. => physical therapy, adaptive tools";
+            }
+            if (avgSeverity > 2) {
+                analysisText = "Severe tremors - Immediate medical attention required! => Deep Brain Stimulation (DBS)";
+            }
+
+            if (analysisText !== lastAnalysis) {
+                document.getElementById("analysis").innerText = analysisText;
+                lastAnalysis = analysisText;
+            }
+        }
+    </script>
+
+</body>
+</html>
